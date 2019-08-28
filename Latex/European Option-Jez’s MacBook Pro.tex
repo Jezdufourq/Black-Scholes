@@ -1,0 +1,171 @@
+\documentclass[12pt]{article}
+\usepackage{lipsum}
+\usepackage{amsmath, amssymb}
+\usepackage[margin=2cm]{geometry} % Margin
+\usepackage{float} % Allows you to control float positions
+\usepackage{graphicx} % Allows you to import images
+\usepackage{multirow}
+\usepackage[myheadings]{fullpage}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{array}
+\usepackage{amsmath}
+% !TeX spellcheck = en_US
+\usepackage{listings}
+\usepackage{xcolor} % for setting colors
+\usepackage{cite}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\newcommand{\HRule}[1]{\rule{\linewidth}{#1}}
+\setcounter{tocdepth}{5}
+\setcounter{secnumdepth}{5}
+% set the default code style
+\lstset{
+	frame=tb, % draw a frame at the top and bottom of the code block
+	tabsize=4, % tab space width
+	showstringspaces=false, % don't mark spaces in strings
+	numbers=left, % display line numbers on the left
+	commentstyle=\color{green}, % comment color
+	keywordstyle=\color{blue}, % keyword color
+	stringstyle=\color{red}, % string color
+	breaklines=true, % wrapping the lines back around
+	postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space} % Annotating the wrapped lines
+}
+
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+%-------------------------------------------------------------------------------
+% HEADER & FOOTER
+%-------------------------------------------------------------------------------
+\usepackage{fancyhdr}
+\setlength{\headheight}{15.2pt}
+\pagestyle{fancy}
+
+
+\author{Jeremiah Dufourq}
+\begin{document}
+	\begin{titlepage}
+		\centering
+		
+		
+		{\scshape\LARGE Queensland University of Technology \par}
+		\vspace{5cm}
+		{\scshape\Large Black Scholes Model\par}
+		\vspace{1.5cm}
+		{\huge\bfseries Extracted from \textit{C++ for Financial Engineers}\par}
+		\vspace{2cm}
+		{\Large\itshape Jeremiah Dufourq\par}
+		
+		% Bottom of the page
+		{\large \today\par}
+	\end{titlepage}
+	
+	
+	\newpage
+	\tableofcontents
+	\newpage
+	
+	
+	\section{Rationale:}
+	The purpose of this document to to gain an insight into how the Black Scholes Model functions, and how a C++ model can be developed to price call and put options using the Black Scholes Method. 
+	
+	To give some context, this report will be adapted from the works of Daniel J. Duffy, in his book \textit{Introduction to C++ for Financial Engineers}. The goal of this book was to introduce the reader to the C++ programming language and its applications to the field of quantitative finance. There are three main parts to the book, which are detailed below:
+	
+	\begin{enumerate}
+		\item C++ syntax 
+		\item C++ design patterns, data structures, and libraries
+		\item C++ quantitative finance applications
+	\end{enumerate}
+	
+	\section{Introduction}
+	
+	\section{Black Scholes}
+	
+	We can derive the Black Scholes PDE using the delta hedging argument.
+	
+	\begin{equation}
+	\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2S^2 \frac{\partial^2 V}{\partial S^2}+rS\frac{\partial V}{\partial S} - rV = 0
+	\end{equation}
+	
+	The key assumptions of this model are as follows:
+	
+	The price of a stock follows a geometric brownian motion
+	\begin{equation}
+	dS_{t}= \mu S_{t} dt + \sigma S_{t} dw_{t}
+	\end{equation}
+	
+	Whereby, $\mu$ $\sigma$ are constants
+	
+	The price of an option is a function of the following:
+	
+	
+	$V = V(T-t, S_{t}; r, \sigma, k)$
+	Whereby,
+	\begin{align*}
+	T - t &= Time to maturity of option \\
+	S_{t} &= Stock price \\
+	r &= Risk free rate \\
+	\sigma &= Volatility \\
+	K &= Strike price on option \\
+	\end{align*}
+	
+	Given that $\sigma, r, K$ are constant, we can then rewrite;
+	
+	\begin{equation}
+	V = V(T-t,S_{t}) \iff V_{t}
+	\end{equation}
+	
+	The value of a bank account amount has no stochastic property, and can therefore be written as:
+	
+	\begin{equation}
+	dB = rBdt
+	\end{equation}
+	Whereby,
+	
+	\begin{align*}
+	r &= risk free rate. \\
+	B &= Bank account. \\
+	\end{align*}
+	
+	Using the above assumptions, we can derive the Black Scholes PDE equation.
+	
+	We know through Ito's Lemma, the follow is true;
+	
+	\begin{equation}
+	dV = \frac{\partial V}{\partial t}dt + \frac{\partial V}{\partial S}dS + \frac{1}{2}\frac{\partial^2 V}{\partial s^2}dS^2
+	\end{equation}
+	This asserts that the derivative of a stochastic function is equal to the above formula.
+	We can use the above to substitute into Ito's Lemma
+	Taking the 2nd order differential of $dS$ with respect to time;
+	
+	\begin{align*}
+	\frac{dS^2}{dt} &= \frac{dS}{dt}[\mu Sdt] + \frac{dS}{dt}[\sigma SdW]
+	\end{align*}
+	
+	we can then use the product rule,
+	\begin{align*}
+	\frac{dS}{dt} &= \sigma ^2 S^2 dt 
+	\end{align*}
+	
+	We ca then substitute into Ito's Lemma to get;
+	
+	
+	
+	
+	\lhead{Jeremiah Dufourq}
+	\rhead{Black Scholes Model}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+\end{document}          

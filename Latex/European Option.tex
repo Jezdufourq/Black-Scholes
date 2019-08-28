@@ -1,0 +1,286 @@
+\documentclass[12pt]{article}
+\usepackage{lipsum}
+\usepackage{amsmath, amssymb}
+\usepackage[margin=2cm]{geometry} % Margin
+\usepackage{float} % Allows you to control float positions
+\usepackage{graphicx} % Allows you to import images
+\usepackage{multirow}
+\usepackage[myheadings]{fullpage}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{array}
+\usepackage{amsmath}
+% !TeX spellcheck = en_US
+\usepackage{listings}
+\usepackage{xcolor} % for setting colors
+\usepackage{cite}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\newcommand{\HRule}[1]{\rule{\linewidth}{#1}}
+\setcounter{tocdepth}{5}
+\setcounter{secnumdepth}{5}
+% set the default code style
+\lstset{
+	frame=tb, % draw a frame at the top and bottom of the code block
+	tabsize=4, % tab space width
+	showstringspaces=false, % don't mark spaces in strings
+	numbers=left, % display line numbers on the left
+	commentstyle=\color{green}, % comment color
+	keywordstyle=\color{blue}, % keyword color
+	stringstyle=\color{red}, % string color
+	breaklines=true, % wrapping the lines back around
+	postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space} % Annotating the wrapped lines
+}
+
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+%-------------------------------------------------------------------------------
+% HEADER & FOOTER
+%-------------------------------------------------------------------------------
+\usepackage{fancyhdr}
+\setlength{\headheight}{15.2pt}
+\pagestyle{fancy}
+
+
+\author{Jeremiah Dufourq}
+\begin{document}
+\begin{titlepage}
+	\centering
+	
+	
+	{\scshape\LARGE Queensland University of Technology \par}
+	\vspace{5cm}
+	{\scshape\Large Black Scholes Model\par}
+	\vspace{1.5cm}
+	{\huge\bfseries Extracted from \textit{C++ for Financial Engineers}\par}
+	\vspace{2cm}
+	{\Large\itshape Jeremiah Dufourq\par}
+	
+	% Bottom of the page
+	{\large \today\par}
+\end{titlepage}
+
+
+\newpage
+\tableofcontents
+\newpage
+
+
+\section{Rationale:}
+The purpose of this document to to gain an insight into how the Black Scholes Model functions, and how a C++ model can be developed to price call and put options using the Black Scholes Method. 
+
+To give some context, this report will be adapted from the works of Daniel J. Duffy, in his book \textit{Introduction to C++ for Financial Engineers}. The goal of this book was to introduce the reader to the C++ programming language and its applications to the field of quantitative finance. There are three main parts to the book, which are detailed below:
+
+\begin{enumerate}
+	\item C++ syntax 
+	\item C++ design patterns, data structures, and libraries
+	\item C++ quantitative finance applications
+\end{enumerate}
+
+\section{Introduction}
+
+\section{Black Scholes}
+
+We can derive the Black Scholes PDE using the delta hedging argument.
+
+\begin{equation}
+\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2S^2 \frac{\partial^2 V}{\partial S^2}+rS\frac{\partial V}{\partial S} - rV = 0
+\end{equation}
+
+The key assumptions of this model are as follows:
+
+The price of a stock follows a geometric brownian motion
+\begin{equation}
+dS_{t}= \mu S_{t} dt + \sigma S_{t} dw_{t}
+\end{equation}
+
+Whereby, $\mu$ $\sigma$ are constants
+
+The price of an option is a function of the following:
+
+
+$V = V(T-t, S_{t}; r, \sigma, k)$
+Whereby,
+\begin{align*}
+T - t &= Time to maturity of option \\
+S_{t} &= Stock price \\
+r &= Risk free rate \\
+\sigma &= Volatility \\
+K &= Strike price on option \\
+\end{align*}
+
+Given that $\sigma, r, K$ are constant, we can then rewrite;
+
+\begin{equation}
+V = V(T-t,S_{t}) \iff V_{t}
+\end{equation}
+
+The value of a bank account amount has no stochastic property, and can therefore be written as:
+
+\begin{equation}
+dB = rBdt
+\end{equation}
+Whereby,
+
+\begin{align*}
+r &= risk free rate. \\
+B &= Bank account. \\
+\end{align*}
+
+Using the above assumptions, we can derive the Black Scholes PDE equation.
+
+We know through Ito's Lemma, the follow is true;
+
+\begin{equation}
+dV = \frac{\partial V}{\partial t}dt + \frac{\partial V}{\partial S}dS + \frac{1}{2}\frac{\partial^2 V}{\partial s^2}dS^2
+\end{equation}
+This asserts that the derivative of a stochastic function is equal to the above formula.
+We can use the above to substitute into Ito's Lemma
+Taking the 2nd order differential of $dS$ with respect to time;
+
+\begin{align*}
+\frac{dS^2}{dt} &= \frac{dS}{dt}[\mu Sdt] + \frac{dS}{dt}[\sigma SdW]
+\end{align*}
+
+we can then use the product rule,
+\begin{align*}
+\frac{dS}{dt} &= \sigma ^2 S^2 dt 
+\end{align*}
+
+We can then substitute into Ito's Lemma to get;
+
+\begin{align*}
+dV &= \frac{\partial V}{\partial t}dt+\frac{\partial V}{\partial S}(\mu Sdt + \sigma SdW) + \frac{1}{2}\frac{\partial ^2V}{\partial S^2}\sigma^2 S^2 dt \\
+dV &= (\frac{\partial V}{\partial t} + \mu S \frac{\partial V}{\partial S} + \frac{1}{2}\sigma ^2 S^2 \frac{\partial ^2V}{\partial S^2})dt + \sigma S \frac {\partial V}{\partial S}dW
+\end{align*}
+
+The Black Scholes model eliminates the stochastic component by using a delta hedging strategy. This is implemented by buying the underlying security to offset the stochastic portion of the equation.
+We can model this by assuming that we take some position in the stock and some position in the bank (i.e riskless position in the bank).
+
+We can model the position in the bank by the following equation.
+
+\begin{equation}
+\pi = \Delta S + \alpha B
+\end{equation}
+
+Whereby;
+
+\begin{align*}
+\pi &= position in bank \\
+\Delta &= \% of stock position \\
+S &= Stock position \\
+\alpha &= \% of bank position \\
+B &= Bank position \\
+\end{align*}
+
+This portfolio will change with time, and therefore can be written as a differential equation;
+
+\begin{equation}
+d\pi = \Delta dS + \alpha dB
+\end{equation}
+
+Recalling the following, whereby an asset is modeled by a stochastic Brownian motion process;
+
+\begin{align*}
+dS &= \mu Sdt + \sigma S dW \\
+dB &= rBdt \\
+d\pi &= \Delta (\mu Sdt + \sigma SdW) + \alpha rBdt \\
+\therefore d \pi &= (\Delta \mu S + \alpha rB)dt + \Delta \sigma SdW \\
+\end{align*}
+
+From above, we have set up two equations for the price of the option, and the price of the portfolio.
+
+\begin{equation}
+dV = (\frac{\partial V}{\partial t} + \mu S \frac{\partial V}{\partial S} + \frac {1}{2}\sigma ^2 S^2 \frac{\partial ^2 V}{\partial S^2})dt + \sigma S \frac{\partial V}{\partial S}dW
+\end{equation}
+
+\begin{equation}
+d \pi = (\Delta \mu S + \alpha rB)dt + \Delta \sigma SdW
+\end{equation}
+
+Our aim is to eliminate the stochastic part of each term, i.e;
+\begin{align*}
+\Delta \sigma S + \sigma S \frac{\partial V}{\partial S} = 0
+\end{align*}
+
+with manipulation, we find;
+\begin{equation}
+\Delta = -\frac{\partial V}{\partial S}
+\end{equation}
+
+We can then combine the portfolio and option rates of change, along with $\Delta$ to get the following. Where $dV$ is the change in the option rate and $d \pi$ is the change in the portfolio.
+
+\begin{align*}
+dV + d \pi &= (\frac{\partial V}{\partial t} + \mu S \frac{\partial V}{\partial S} + \frac{1}{2}\sigma^2 S^2 \frac{\partial ^2 V}{\partial S^2} - \frac{\partial V}{\partial S}\mu S + \alpha rB)dt \\
+\end{align*}
+
+\begin{equation}
+d(V + \pi) = (\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial ^2 V}{\partial S^2} + \alpha rB)dt
+\end{equation}
+
+Recall the following, where $\Delta$ has been replaced by the known value of delta in (10);
+
+\begin{align*}
+\pi = -\frac{\partial V}{\partial S}S + \alpha B \\
+\end{align*}
+
+The total portfolio has only a deterministic term, and hence must grow at the risk free rate to avoid arbitrage. 
+\begin{align*}
+d(V + \pi) &= (V + \pi)rdt \\
+\end{align*}
+
+Substituting $\pi$ into above.
+\begin{equation}
+d(V + \pi) = (V - \frac{\partial V}{\partial S}S + \alpha B)rdt
+\end{equation}
+
+Letting equation $(11) = (12)$.
+
+\begin{align*}
+\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial ^2 V}{\partial S^2}+\alpha rB = rV - r \frac{\partial V}{\partial S}S + \alpha rB \\
+\end{align*}
+
+Rearranging for 0 on RHS, we get the Black Scholes PDE;
+\begin{equation}
+\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial ^2 V}{\partial S^2} + rS \frac{\partial V}{\partial S} - rV = 0
+\end{equation}
+
+\section{Solving the Black Scholes PDE}
+In this section, the Black Scholes PDE will be solved using the heat equation. To solve the Black Scholes PDE, we need to specify the terminal and bonding conditions. As defined in prior, the Black Scholes model PDE is defined in (13), which is also summarized below:
+
+\begin{equation}
+\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial ^2 V}{\partial S^2} + rS \frac{\partial V}{\partial S} - rV = 0
+\end{equation}
+
+We will transform the variables to represent the terminal and current times. Let,
+
+\begin{align*}
+\tau = T - t [Current Time] \\
+\tau = 0 [Terminal Time] \\
+\tilde{S_{\tau}} [Stock price currently] \\
+\tilde{S_{0}}[Stock price at maturity] \\
+\tilde{V_{\tau}} [Option price currently] \\
+\tilde{V_{0}} [Option price at maturity] \\
+\end{align*}
+
+We can find the median of the stock price at maturity using the following (solution can be found in the appendix).
+
+\begin{equation}
+S_{T} = e^{\ln{S_{T}} + (r - \frac{1}{2}\sigma ^2)(T-t) + \sigma(W_{T} - W_{t})}
+\end{equation}
+
+We can ignore the stochastic term because of the PDE,
+
+\begin{align*}
+\tilde{S_{0}} = e^{ln{\tilde{S_{\tau}}} + (r-\frac{1}{2}\sigma ^2)\tau}
+\end{align*}
+Whereby,
+\begin{align*}
+\tau = T- t
+\end{align*}
+
+\lhead{Jeremiah Dufourq}
+\rhead{Black Scholes Model}
+
+\end{document}          

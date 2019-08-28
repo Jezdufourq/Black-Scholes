@@ -1,5 +1,6 @@
 #include "EuropeanOption.hpp"
 #include <math.h>
+#include "math_utils.cpp"
 
 double EuropeanOption::CallPrice() const
 {
@@ -145,9 +146,5 @@ void EuropeanOption::toggle()
         optType = "C";
     }
 }
-
-
-
-
 
 
