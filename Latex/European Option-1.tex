@@ -1,0 +1,581 @@
+\documentclass[12pt]{article}
+\usepackage{lipsum}
+\usepackage{amsmath, amssymb}
+\usepackage[margin=2cm]{geometry} % Margin
+\usepackage{float} % Allows you to control float positions
+\usepackage{graphicx} % Allows you to import images
+\usepackage{multirow}
+\usepackage[myheadings]{fullpage}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{array}
+\usepackage{amsmath}
+% !TeX spellcheck = en_US
+\usepackage{listings}
+\usepackage{xcolor} % for setting colors
+\usepackage{cite}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{mathtools}
+
+\newcommand{\HRule}[1]{\rule{\linewidth}{#1}}
+\setcounter{tocdepth}{5}
+\setcounter{secnumdepth}{5}
+% set the default code style
+\lstset{
+	basicstyle=\ttfamily,
+	columns=fullflexible,
+	frame=single,
+	breaklines=true,
+	postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+}
+
+\lstset{language=C++,
+	basicstyle=\ttfamily,
+	keywordstyle=\color{blue}\ttfamily,
+	stringstyle=\color{red}\ttfamily,
+	commentstyle=\color{green}\ttfamily,
+	morecomment=[l][\color{magenta}]{\#}
+}
+
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcommand\myeq{\stackrel{\mathclap{\normalfont\mbox{def}}}{=}}
+
+%-------------------------------------------------------------------------------
+% HEADER & FOOTER
+%-------------------------------------------------------------------------------
+\usepackage{fancyhdr}
+\setlength{\headheight}{15.2pt}
+\pagestyle{fancy}
+
+
+\author{Jeremiah Dufourq}
+\begin{document}
+\begin{titlepage}
+	\centering
+	
+	
+	{\scshape\LARGE Queensland University of Technology \par}
+	\vspace{5cm}
+	{\scshape\Large Black Scholes Model\par}
+	\vspace{1.5cm}
+	{\huge\bfseries Extracted from \textit{C++ for Financial Engineers}\par}
+	\vspace{2cm}
+	{\Large\itshape Jeremiah Dufourq\par}
+\end{titlepage}
+
+
+\newpage
+\tableofcontents
+\newpage
+
+\section{Rationale}
+The purpose of this document to to gain an insight into how the Black Scholes Model functions, and how a C++ model can be developed to price call and put options using the Black Scholes Method. 
+
+To give some context, this report will be adapted from the works of Daniel J. Duffy, in his book \textit{Introduction to C++ for Financial Engineers}. The goal of this book was to introduce the reader to the C++ programming language and its applications to the field of quantitative finance. There are three main parts to the book, which are detailed below:
+
+\begin{enumerate}
+	\item C++ syntax 
+	\item C++ design patterns, data structures, and libraries
+	\item C++ quantitative finance applications
+\end{enumerate}
+
+\section{Introduction}
+This document will cover the Black Scholes Meriton Model. It is broken down into two sections, the Black Scholes model, and an implementation of the Black Scholes Model in C++. In the Black Scholes model section, the PDE is derived using the delta hedging argument. From here, the PDE is transformed into the heat equation, where it is then solved to produce the Black Scholes formula. This Black Scholes formula is then implemented in the section section of the report using C++. The implementation consists of a classes which calculates the price and delta of a put and call option based on the input parameters of the user. 
+
+\section{Black Scholes}
+\subsection{Black Scholes PDE - delta hedging argument}
+We can derive the Black Scholes PDE using the delta hedging argument.
+\begin{equation}
+\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2S^2 \frac{\partial^2 V}{\partial S^2}+rS\frac{\partial V}{\partial S} - rV = 0
+\end{equation}
+The key assumptions of this model are as follows
+
+\begin{enumerate}
+	\item The price of a stock follows a geometric Brownian motion
+	\item The value of a bank account has no stochastic property
+\end{enumerate}
+
+The price of a stock follows a geometric brownian motion
+\begin{equation}
+dS_{t}= \mu S_{t} dt + \sigma S_{t} dw_{t}
+\end{equation}
+Whereby, $\mu$ $\sigma$ are constants. The price of an option is a function of the following:
+\begin{align*}
+V &= V(T-t, S_{t}; r, \sigma, k)
+\end{align*}
+Whereby,
+\begin{align*}
+T - t &= \text{Time to maturity of option} \\
+S_{t} &= \text{Stock price} \\
+r &= \text{Risk free rate} \\
+\sigma &= \text{Volatility} \\
+K &= \text{Strike price on option} \\
+\end{align*}
+
+Given that $\sigma, r, K$ are constant, we can then rewrite;
+
+\begin{align*}
+V = V(T-t,S_{t}) \iff V_{t}
+\end{align*}
+
+The value of a bank account amount has no stochastic property, and can therefore be written as:
+
+\begin{equation}
+dB = rBdt
+\end{equation}
+Whereby,
+
+\begin{align*}
+r &= \text{risk free rate.} \\
+B &= \text{Bank account.} \\
+\end{align*}
+
+Using the above assumptions, we can derive the Black Scholes PDE equation.
+
+We know through Ito's Lemma, the follow is true;
+
+\begin{equation}
+dV = \frac{\partial V}{\partial t}dt + \frac{\partial V}{\partial S}dS + \frac{1}{2}\frac{\partial^2 V}{\partial s^2}dS^2
+\end{equation}
+
+This asserts that the derivative of a stochastic function is equal to the above formula. We can use the above to substitute into Ito's Lemma. Taking the 2nd order differential of $dS$ with respect to time;
+
+\begin{align*}
+\frac{dS^2}{dt} &= \frac{dS}{dt}[\mu Sdt] + \frac{dS}{dt}[\sigma SdW]
+\end{align*}
+
+we can then use the product rule,
+\begin{align*}
+\frac{dS}{dt} &= \sigma ^2 S^2 dt 
+\end{align*}
+
+We can then substitute into Ito's Lemma to get;
+
+\begin{align*}
+dV &= \frac{\partial V}{\partial t}dt+\frac{\partial V}{\partial S}(\mu Sdt + \sigma SdW) + \frac{1}{2}\frac{\partial ^2V}{\partial S^2}\sigma^2 S^2 dt \\
+dV &= \left(\frac{\partial V}{\partial t} + \mu S \frac{\partial V}{\partial S} + \frac{1}{2}\sigma ^2 S^2 \frac{\partial ^2V}{\partial S^2}\right)dt + \sigma S \frac {\partial V}{\partial S}dW
+\end{align*}
+
+The Black Scholes model eliminates the stochastic component by using a delta hedging strategy. This is implemented by buying the underlying security to offset the stochastic portion of the equation.
+We can model this by assuming that we take some position in the stock and some position in the bank (i.e riskless position in the bank).
+
+We can model the position in the bank by the following equation.
+
+\begin{equation}
+\pi = \Delta S + \alpha B
+\end{equation}
+
+Whereby;
+
+\begin{align*}
+\pi &= \text{position in bank} \\
+\Delta &= \text{\% of stock position} \\
+S &= \text{Stock position} \\
+\alpha &= \text{\% of bank position} \\
+B &= \text{Bank position} \\
+\end{align*}
+
+This portfolio will change with time, and therefore can be written as a differential equation;
+
+\begin{equation}
+d\pi = \Delta dS + \alpha dB
+\end{equation}
+
+Recalling the following, whereby an asset is modeled by a stochastic Brownian motion process;
+
+\begin{align*}
+dS &= \mu Sdt + \sigma S dW \\
+dB &= rBdt \\
+d\pi &= \Delta (\mu Sdt + \sigma SdW) + \alpha rBdt \\
+\therefore d \pi &= (\Delta \mu S + \alpha rB)dt + \Delta \sigma SdW \\
+\end{align*}
+
+From above, we have set up two equations for the price of the option, and the price of the portfolio.
+
+\begin{equation}
+dV = \left(\frac{\partial V}{\partial t} + \mu S \frac{\partial V}{\partial S} + \frac {1}{2}\sigma ^2 S^2 \frac{\partial ^2 V}{\partial S^2}\right)dt + \sigma S \frac{\partial V}{\partial S}dW
+\end{equation}
+
+\begin{equation}
+d \pi = (\Delta \mu S + \alpha rB)dt + \Delta \sigma SdW
+\end{equation}
+
+Our aim is to eliminate the stochastic part of each term, i.e;
+\begin{align*}
+\Delta \sigma S + \sigma S \frac{\partial V}{\partial S} = 0
+\end{align*}
+
+with manipulation, we find;
+\begin{equation}
+\Delta = -\frac{\partial V}{\partial S}
+\end{equation}
+
+We can then combine the portfolio and option rates of change, along with $\Delta$ to get the following. Where $dV$ is the change in the option rate and $d \pi$ is the change in the portfolio.
+
+\begin{align*}
+dV + d \pi &= \left(\frac{\partial V}{\partial t} + \mu S \frac{\partial V}{\partial S} + \frac{1}{2}\sigma^2 S^2 \frac{\partial ^2 V}{\partial S^2} - \frac{\partial V}{\partial S}\mu S + \alpha rB\right)dt \\
+\end{align*}
+
+\begin{equation}
+d(V + \pi) = \left(\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial ^2 V}{\partial S^2} + \alpha rB\right)dt
+\end{equation}
+
+Recall the following, where $\Delta$ has been replaced by the known value of delta in (10);
+
+\begin{align*}
+\pi = -\frac{\partial V}{\partial S}S + \alpha B \\
+\end{align*}
+
+The total portfolio has only a deterministic term, and hence must grow at the risk free rate to avoid arbitrage. 
+\begin{align*}
+d(V + \pi) &= (V + \pi)rdt \\
+\end{align*}
+
+Substituting $\pi$ into above.
+\begin{equation}
+d(V + \pi) = \left(V - \frac{\partial V}{\partial S}S + \alpha B\right)rdt
+\end{equation}
+
+Letting equation $(11) = (12)$.
+
+\begin{align*}
+\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial ^2 V}{\partial S^2}+\alpha rB = rV - r \frac{\partial V}{\partial S}S + \alpha rB \\
+\end{align*}
+
+Rearranging for 0 on RHS, we get the Black Scholes PDE;
+\begin{equation}
+\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial ^2 V}{\partial S^2} + rS \frac{\partial V}{\partial S} - rV = 0
+\end{equation}
+
+\subsection{Black Scholes PDE to Heat Equation}
+In this section, the Black Scholes PDE will be solved using the heat equation. To solve the Black Scholes PDE, we need to specify the terminal and bonding conditions. As defined in prior, the Black Scholes model PDE is defined in (13), which is also summarized below:
+
+\begin{equation}
+\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial ^2 V}{\partial S^2} + rS \frac{\partial V}{\partial S} - rV = 0
+\end{equation}
+
+We will transform the variables to represent the terminal and current times. Let,
+
+\begin{align*}
+\tau = T - t \text{[Current Time]}\\
+\tau = 0 \text{[Terminal Time]}\\
+\tilde{S_{\tau}} \text{[Stock price currently]}\\
+\tilde{S_{0}}\text{[Stock price at maturity]}\\
+\tilde{V_{\tau}} \text{[Option price currently]} \\
+\tilde{V_{0}} \text{[Option price at maturity]}\\
+\end{align*}
+
+We can find the median of the stock price at maturity using the following (solution can be found in the appendix).
+
+\begin{equation}
+S_{T} = e^{\ln{S_{T}} + (r - \frac{1}{2}\sigma ^2)(T-t) + \sigma(W_{T} - W_{t})}
+\end{equation}
+
+We can ignore the stochastic term because of the PDE,
+
+\begin{align*}
+\tilde{S_{0}} = e^{ln{\tilde{S_{\tau}}} + (r-\frac{1}{2}\sigma ^2)\tau}
+\end{align*}
+Whereby,
+\begin{align*}
+\tau = T- t
+\end{align*}
+
+We can transform $\tilde{S_{0}}$ by recalling that the derivative of $ln{x} = \frac{1}{x}$. Therefore, we can show that,
+
+\begin{align*}
+x &= ln{\tilde{S_{\tau}}} + (r-\frac{1}{2}\sigma ^2)\tau
+\end{align*}
+
+We can also transform the current premium on the option to it's forward value by doing,
+\begin{align*}
+F_{\tau} &= \tilde{V_{\tau}}e^{r\tau}
+\end{align*}
+We will make the following translations:
+\begin{align*}
+\tau &= T - t \\
+x &= ln{\tilde{S_{\tau}}} + (r-\frac{1}{2}\sigma ^2)\tau \\
+F_{\tau} &= \tilde{V_{\tau}}e^{r\tau} \\
+S_{t} &\myeq \tilde{S_{\tau}} \\
+V_{t} &\myeq \tilde{V_{\tau}} \\
+\end{align*}
+
+Therefore, the following become using the translations;
+\begin{align*}
+\frac{\partial V}{\partial S} &= \frac{\partial \tilde{V}}{\partial \tilde{S}}
+\end{align*}
+Applying the chain rule;
+\begin{align*}
+\frac{\partial V}{\partial t} &= \frac{\partial \tilde{V}}{\partial \tau} \times \frac{\partial \tau}{\partial t} 
+\end{align*}
+Recall that $\tau = T - t$,
+\begin{align*}
+\therefore \frac{\partial \tau}{\partial t} &= -1 \\
+\frac{\partial V}{\partial t} &= -\frac{\partial \tilde{V}}{\partial \tau}
+\end{align*}
+
+Substituting the above into the PDE,
+\begin{align*}
+-\frac{\partial \tilde{V}}{\partial \tau} + \frac{1}{2}\sigma^2 \tilde{S^2}\frac{\partial ^2 \tilde{V}}{\partial \tilde{S}^2} + r \tilde{S}\frac{\partial\tilde{V}}{\partial \tilde{S}} - r\tilde{V} &= 0 \\
+\end{align*}
+
+Through this process, we have transformed a backward Black Scholes PDE into the forward PDE. We can transform this PDE into the heat equation. Following from this, we will be able to solve the heat equation.
+
+We will take the second transformation of the following form;
+
+\begin{align*}
+x &= ln{\tilde{S_{\tau}}} + (r - \frac{1}{2}\sigma ^2)\tau \\
+F_{\tau} &= \tilde{V_{\tau}}e^{r\tau} \\
+\tilde{V}(\tilde{S}, \tau) &\myeq v(x, \tau) \\
+\tilde{V_{\tau}} &= v_{\tau} \\
+F_{\tau} &= v_{\tau}e^{r\tau} \\
+\end{align*}
+
+Change the $\tilde{V}^\prime (\tilde{S})$ to $v^\prime(x)$, using the chain rule,
+
+\begin{align*}
+\frac{\partial \tilde{V}}{\partial \tilde{S}} &= \frac{\partial v}{\partial x}\times \frac{\partial x}{\partial \tilde{S}} \\
+\frac{\partial \tilde{V}}{\partial \tilde{S}} &= \frac{\partial v}{\partial x}\frac{1}{\tilde{S}} \\
+\frac{\partial ^2\tilde{V}}{\partial \tilde{S}^2} &= \frac{\partial}{\partial \tilde{S}}\left(\frac{\partial v}{\partial x}\frac{1}{\tilde{S}}\right) \\
+\end{align*}                                     
+Using the product rule,
+\begin{align*}
+\frac{\partial ^2\tilde{V}}{\partial \tilde{S}^2} &= -\frac{\partial v}{\partial x}\frac{1}{\tilde{S}^2} + \frac{1}{\tilde{S}}\frac{\partial}{\partial\tilde{S}}\left(\frac{\partial v}{\partial x}\right)
+\end{align*}
+Using the chain rule,
+\begin{align*}
+\frac{\partial ^2\tilde{V}}{\partial \tilde{S}^2} &= -\frac{\partial v}{\partial x}\frac{1}{\tilde{S}^2} + \frac{1}{\tilde{S}}\frac{\partial}{\partial x}\left(\frac{\partial v}{\partial x}\right)\frac{\partial x}{\partial S} \\
+\frac{\partial ^2\tilde{V}}{\partial \tilde{S}^2} &= - \frac{\partial v}{\partial x}\frac{1}{\tilde{S}^2} + \frac{1}{\tilde{S}^2}\frac{\partial ^2 v}{\partial x^2} \\
+\frac{\partial ^2\tilde{V}}{\partial \tilde{S}^2} &= \frac{1}{\tilde S^2}\left(-\frac{\partial v}{\partial x}+\frac{\partial^2 v}{\partial x}\right)\\
+\end{align*}
+
+We also need to find the derivative of $\tilde{V}(\tau)$. We can do this by the following,
+
+\begin{align*}
+\frac{\partial\tilde{V}}{\partial\tau} &= \frac{\partial v}{\partial\tau} + \frac{\partial v}{\partial x}\frac{\partial x}{\partial \tau} \\
+\end{align*}
+Recall,
+\begin{align*}
+x &= ln{\tilde{S_{\tau}}} + \left(r - \frac{1}{2}\sigma ^2\right)\tau \\
+\therefore \frac{\partial x}{\partial \tau} &= \left(r - \frac{1}{2} \sigma ^2\right) \\
+\end{align*}
+Subbing back in,
+\begin{align*}
+\frac{\partial\tilde{V}}{\partial\tau} &= \frac{\partial v}{\partial\tau} + \frac{\partial v}{\partial x}\left(r - \frac{1}{2}\sigma^2\right)\\
+\end{align*}
+
+Therefore, by the previous working we have the following equations to use to substitute into the forward PDE, and to solve for the heat equation.
+
+\begin{equation}
+\frac{\partial\tilde{V}}{\partial\tilde{S}} = \frac{\partial V}{\partial x}\frac{1}{\tilde{S}}
+\end{equation}
+\begin{equation}
+\frac{\partial ^2 \tilde{V}}{\partial \tilde{S}^2} = \frac{1}{\tilde{S}^2}\left(-\frac{\partial v}{\partial x} + \frac{\partial ^2 v}{\partial x^2}\right)
+\end{equation}
+\begin{equation}
+\frac{\partial \tilde{V}}{\partial \tau} = \frac{\partial v}{\partial\tau} + \frac{\partial v}{\partial x}\left(r - \frac{1}{2}\sigma^2\right)
+\end{equation}
+
+Substituting into the PDE,
+\begin{align*}
+-\frac{\partial v}{\partial \tau} - \frac{\partial v}{\partial x}\left(r - \frac{1}{2}\sigma^2\right) + \frac{1}{2}\sigma^2\left(-\frac{\partial v}{\partial x}+\frac{\partial ^2v}{\partial x^2}\right) + r\frac{\partial v}{\partial x} - rv &= 0 \\
+-\frac{\partial v}{\partial \tau} - \frac{\partial v}{\partial x}\left(r - \frac{1}{2}\sigma ^2\right) + \frac{1}{2} \sigma^2\frac{\partial ^2v}{\partial x^2}+\frac{\partial v}{\partial x}\left(r - \frac{1}{2}\sigma^2\right) - rv & = 0 \\
+-\frac{\partial v}{\partial \tau} + \frac{1}{2}\sigma^2\frac{\partial ^2 v}{\partial x^2} - rv &= 0 \\
+\end{align*}
+
+We recall that, 
+\begin{align*}
+F_{\tau} = V_{\tau}e^{r\tau} \iff  v = Fe^{-r\tau}
+\end{align*}
+
+We can then use this to take the derivative,
+
+\begin{align*}
+\frac{\partial v^2}{\partial x} &= e^{r\tau}\frac{\partial F}{\partial x} \\
+\frac{\partial ^2 v}{\partial x^2} &= e^{r\tau}\frac{\partial ^2 F}{\partial x^2} \\
+\frac{\partial v}{\partial x^2} &= e^{r\tau}\frac{\partial F}{\partial \tau} + F \frac{\partial}{\partial\tau}e^{-r\tau} \\
+\frac{\partial v}{\partial x^2} &= e^{r\tau}\frac{\partial F}{\partial \tau} - rFe^{-r\tau} \\
+\end{align*}
+
+We can then use the following above to sub into the PDE,
+
+\begin{align*}
+-e^{-r\tau}\frac{\partial F}{\partial \tau} + rFe^{-r\tau}+\frac{1}{2}\sigma ^2 e^{-r\tau}\frac{\partial ^2F}{\partial x^2}-rFe^{-r\tau} &= 0\\
+-e^{-r\tau}\frac{\partial F}{\partial \tau} + \frac{1}{2}\sigma ^2 e^{-r\tau}\frac{\partial ^2 F}{\partial x^2} &= 0 \\
+\frac{-e^{-r\tau}\frac{\partial F}{\partial \tau}}{-e^{-r\tau}}+\frac{\frac{1}{2}\sigma ^2 e^{-r\tau}\frac{\partial ^2 F}{\partial  x^2}}{-e^{-r\tau}} &= \frac{0}{-e^{-r\tau}} \\  
+\end{align*}
+Therefore, we get the heat equation.
+\begin{equation}
+\therefore \frac{\partial F}{\partial \tau} = \frac{1}{2}\sigma ^2 \frac{\partial ^2 F}{\partial x^2}
+\end{equation}
+
+\subsection{Solving the heat equation}
+We first need to transform the variables so that they are consistent. We know that the value of a call option is.
+
+\begin{align*}
+	V_{T} &= max(S_{T} - K, 0)
+\end{align*}
+Whereby,
+\begin{align*}
+T &= \text{time} \\
+S_{T} &= \text{stock price} \\
+K &= \text{strike price} \\
+\end{align*}
+If we have the following heat equation, we know the solution to the heat equation is as follows,
+
+\begin{equation}
+f(x, t) = \int_{-\infty}^{\infty} \Psi(z) \frac{1}{\sqrt{4\pi Dt}}e^{-\frac{(x - z)^2}{4Dt}}dx
+\end{equation}
+
+Substituting for D, whereby D is $\frac{1}{2}$, and then simplifying we get,
+
+\begin{equation}
+F(x, \tau) = \int_{-\infty}^{\infty}(e^{z}-K)^{+}\frac{1}{\sigma \sqrt{2 \pi \tau}}e^{-\frac{(x-z)^2}{2\sigma^2 \tau}}dz
+\end{equation}
+
+We know that the option price minus the strike price must be greater then or equal to 0 at expiration,
+
+\begin{align*}
+e^{z} - K \geq 0 \\
+\therefore e^{z} \geq K \iff z \geq ln{k} \\
+\end{align*}
+
+We can then use the above to transform equation 21,
+\begin{align*}
+F(x,\tau) &= \int_{ln{K}}^{\infty}(e^{z}-K)\frac{1}{\sigma\sqrt{2 \pi \tau}}e^{-\frac{(x-z)^2}{2\sigma ^2\tau}}dz \\
+F(x,\tau) &= \int_{ln{K}}^{\infty}e^{z}\frac{1}{\sigma\sqrt{2 \pi \tau}}e^{-\frac{(x-z)^2}{2\sigma ^2\tau}}dz - K\int_{ln{K}}^{\infty}\frac{1}{\sigma\sqrt{2 \pi \tau}}e^{-\frac{(x-z)^2}{2\sigma ^2\tau}}dz\\
+\end{align*}
+
+Taking the second term in the expression above, we can do the following calculations. 
+\begin{align*}
+\int_{ln{K}}^{\infty}\frac{1}{\sigma\sqrt{2 \pi \tau}}e^{-\frac{(x-z)^2}{2\sigma ^2\tau}}dz\\
+\end{align*}
+
+We can see that the equation above is the area under the normal distribution curve, whereby,
+\begin{align*}
+z \sim N[x, \sigma ^2 \tau]
+\end{align*}
+
+We know that we can standardize the normal by doing the following,
+\begin{align*}
+Z &= \frac{z-x}{\sigma \sqrt{\tau}} \sim N[0,1] \\
+z &= x + \sigma \sqrt{\tau}Z \\
+\end{align*}
+
+
+Because we have $ln{k}$ on the lowerbound, then the probability of the standard normal is represented as follows,
+\begin{align*}
+\int_{ln{K}}^{\infty} \frac{1}{\sigma \sqrt{2 \pi \tau}} e^{-\frac{(x-z)^2}{2\sigma ^2 \tau}}dz &= Prob(z \geq ln{K}) \\
+&= Prob(x + \sigma \sqrt{\tau}z \geq ln{K}) \\
+&= Prob(Z \geq \frac{ln{K} - x}{\sigma \sqrt{\tau}}) \\
+&= \Phi(Z \geq \frac{ln{K} - x}{\sigma \sqrt{\tau}}) \\
+[\Phi &= \text{standard normal distribution}] \\
+\end{align*}
+
+We can therefore apply this to both expressions previously to get,
+\begin{align*}
+F(x, \tau) &= e^{x+\frac{\sigma ^2 \tau}{2}}\Phi\left(\frac{-ln{K}+x+\sigma ^2 \tau}{\sigma\sqrt{\tau}}\right)-K\Phi\left(\frac{-ln{K}+x}{\sigma\sqrt{\tau}}\right)
+\end{align*}
+
+Recall the following transformations,
+\begin{align*}
+\tau = T - t \\
+x = ln{\tilde{S_{\tau}}}+ \left(r - \frac{1}{2}\sigma^2\right)\tau \\
+F_{\tau} &= V_{\tau}e^{r\tau} \\
+\end{align*}
+
+Therefore, we can do the following transformations,
+\begin{align*}
+V_{\tau}e^{r\tau} &= RHS \\
+\end{align*}
+
+Substitute for x,
+\begin{align*}
+V_{\tau}e^{r\tau} &= e^{ln({\tilde{S_{\tau}}+ r - \frac{1}{2}\sigma ^2})\tau+ \frac{\sigma ^2 \tau}{2}}\Phi \left(\frac{-ln{K} + ln\tilde{S_{\tau}}+ \left(r + \frac{1}{2}\sigma ^2\right)\tau + \sigma ^2 \tau}{\sigma\sqrt{\tau}}\right)-K\Phi\left(\frac{-ln{K}+ln{\tilde{S_{\tau}}}+\left(r - \frac{1}{2}\sigma ^2\right)\tau}{\sigma \sqrt{\tau}}\right)
+\end{align*}
+Simplify $\sigma ^2$ and moving $e^ {r\tau}$ to RHS,
+\begin{align*}
+V_{\tau} &= e^{ln(\tilde{S_{\tau}})}\Phi \left(\frac{-ln{K} + ln\tilde{S_{\tau}}+ \left(r + \frac{1}{2}\sigma ^2\right)\tau}{\sigma\sqrt{\tau}}\right)-Ke^{-r\tau}\Phi\left(\frac{-ln{K}+ln{\tilde{S_{\tau}}}+\left(r - \frac{1}{2}\sigma ^2\right)\tau}{\sigma \sqrt{\tau}}\right)
+\end{align*}
+Recall that,
+
+\begin{align*}
+e^{ln\tilde{S_{\tau}}} &= S
+\end{align*}
+
+Therefore we get the Black Scholes Formula,
+\begin{equation}
+V = S\Phi(d_{1}) - Ke^{-r\tau}\Phi(d_{2})
+\end{equation}
+
+Where,
+\begin{align*}
+\Phi &= \text{CDF of the normal distribution} \\
+d_{1} &= \frac{-ln{K} + ln\tilde{S_{\tau}}+ \left(r + \frac{1}{2}\sigma ^2\right)\tau}{\sigma\sqrt{\tau}} \\
+d_{2} &= \frac{-ln{K}+ln{\tilde{S_{\tau}}}+\left(r - \frac{1}{2}\sigma ^2\right)\tau}{\sigma \sqrt{\tau}} \\
+S & = e^{ln{\tilde{S_{\tau}}}} \\
+\tau &= T - t \\
+K &= \text{Strike price} \\
+\end{align*}
+
+\section{Black Scholes C++ Implementation}
+\subsection{Introduction}
+The implementation of the Black Scholes model was loosely based on the work of Daniel J. Duffy (see rationale section of report). His work covers most applications of financial engineering, including one factor and two factor option pricing models. Given that this report is an introduction to financial engineering, the a simple approach was taken. The implementation consisted of an class file for the option model, a main file and a math utils file for the CDF of the standard normal distribution. In addition to the aforementioned files, a make file was also included for ease of compilation.
+
+The users interaction with the program consisted of a CLI where the user is prompted to enter parameters based on their preferences. In addition, the user can select if they would like to calculate the price, delta or both for either a call or a put option. The price and delta of the options is determined by the parameters they enter for the strike price, time to expiry, risk free rate (interest rate), current stock price, volatility and cost of carry.
+
+\subsection{Option Class}
+The option class consisted of six key parameters - strike price, time to expiry, risk free rate (interest rate), current stock price, volatility and cost of carry. Each of these parameters can be modified and changed based on the instance of the class. In addition to these public parameters, the user can have access to the public methods of price and delta which calculate the price and delta of the option. The price and delta are based on the Black Scholes model as laid out in the previous section.
+\begin{lstlisting}
+// EuropeanOption.hpp
+
+#include <string>
+
+class EuropeanOption{
+	private:
+		void init();    //Init all default values
+		void copy(const EuropeanOption& o2);
+		
+		double CallPrice() const;
+		double PutPrice() const;
+		double CallDelta() const;
+		double PutDelta() const;
+	
+	public:
+		double r;       // Interest rate
+		double sig;     // Vol as sigma
+		double K;       // Strike price
+		double T;       // Exp date
+		double U;       // Current price
+		double b;       // Cost of carry
+	
+	string optType; // Option name (call or a put)
+	
+	public:
+		// Constructors
+		EuropeanOption();                                       // Default call option
+		EuropeanOption(const EuropeanOption& option2);          // Copy constructor
+		EuropeanOption(const string& optionType);               // Create option type
+	
+	// Destructor
+	// NOTE: The tilda deconstructs the class (i.e free up memory)
+	virtual ~EuropeanOption();
+	
+	// Assignment operator
+	// NOTE: I believe that this is assigning the operator a different instance of the EuropeanOption class
+	EuropeanOption& operator = (const EuropeanOption& option2);
+	
+	// Calculating the option price
+	double Price() const;
+	double Delta() const;
+	
+	// Modifier functions
+	void toggle();      // Change option type (Call->Put, Put->Call)
+};
+\end{lstlisting}
+
+\lhead{Jeremiah Dufourq}
+\rhead{Black Scholes Model}
+
+\end{document}          
