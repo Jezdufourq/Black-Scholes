@@ -1,11 +1,5 @@
-main: EuropeanOption.o MainEuropeanOption.o math_utils.o
-	g++ EuropeanOption.o MainEuropeanOption.o math_utils.o -o main.o
-
-math_utils.o: math_utils.cpp
-	g++ -c math_utils.cpp
-
-EuropeanOption.o: EuropeanOption.cpp
-	g++ -c EuropeanOption.cpp
+main: MainEuropeanOption.o 
+	g++ MainEuropeanOption.o -o main.o
 
 MainEuropeanOption.o: MainEuropeanOption.cpp
 	g++ -c MainEuropeanOption.cpp
