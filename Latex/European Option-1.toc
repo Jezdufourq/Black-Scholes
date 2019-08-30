@@ -1,0 +1,9 @@
+\contentsline {section}{\numberline {1}Rationale}{2}% 
+\contentsline {section}{\numberline {2}Introduction}{2}% 
+\contentsline {section}{\numberline {3}Black Scholes}{2}% 
+\contentsline {subsection}{\numberline {3.1}Black Scholes PDE - delta hedging argument}{2}% 
+\contentsline {subsection}{\numberline {3.2}Black Scholes PDE to Heat Equation}{6}% 
+\contentsline {subsection}{\numberline {3.3}Solving the heat equation}{11}% 
+\contentsline {section}{\numberline {4}Black Scholes C++ Implementation}{13}% 
+\contentsline {subsection}{\numberline {4.1}Introduction}{13}% 
+\contentsline {subsection}{\numberline {4.2}Option Class}{14}% 
