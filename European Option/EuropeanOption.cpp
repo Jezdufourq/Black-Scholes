@@ -2,6 +2,9 @@
 #include <math.h>
 #include "math_utils.cpp"
 
+const 
+
+
 double EuropeanOption::CallPrice() const
 {
     double tmp = sig * sqrt(T);
